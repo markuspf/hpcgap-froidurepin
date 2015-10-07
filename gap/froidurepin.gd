@@ -6,4 +6,6 @@
 
 #! @Description
 #!   Insert documentation for you function here
-DeclareGlobalFunction( "froidurepin_Example" );
+DeclareGlobalFunction( "FroidurePinEnumeration" );
+DeclareGlobalFunction( "FroidurePinEval" );
+
