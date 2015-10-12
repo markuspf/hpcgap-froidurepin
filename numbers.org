@@ -1,0 +1,65 @@
+* Collect the Benchmarks here
+#+BEGIN_SRC gap
+RepeatBench(10, do Size(Semigroup(gens)); od);
+RepeatBench(10, do FroidurePinEnumeration(gens); od);
+#+END_SRC
+
+
+
+#+BEGIN_SRC gap
+gens := GeneratorsOfSemigroup(FullTransformationSemigroup(6));
+#+END_SRC gap
+
+|     | Size |      |   FP |      |
+|-----+------+------+------+------|
+| avg | 0.46 | 0.56 | 0.89 | 1.16 |
+| var | 0.02 | 0.01 | 0.03 | 0.06 |
+| med | 0.41 | 0.51 | 0.82 | 1.08 |
+| max | 0.89 | 0.96 | 1.43 | 1.89 |
+| min | 0.40 | 0.49 | 0.79 | 1.03 |
+
+
+#+BEGIN_SRC gap
+gens := [ Transformation( [ 2, 1, 4, 5, 3, 7, 8, 9, 10, 6 ] )
+        , Transformation( [ 1, 2, 4, 3 ] )
+        , Transformation( [ 1, 2, 3, 4, 5, 6, 10, 9, 8, 7 ] )
+        , Transformation( [ 9, 1, 4, 3, 6, 9, 3, 4, 3, 9 ] ) ];
+#+END_SRC
+
+|     |    Size |         |         |         |
+|     |     GAP | HPC-GAP |     GAP | HPC-GAP |
+|-----+---------+---------+---------+---------|
+| avg | 72.3686 | 74.5746 | 82.5264 | 89.1462 |
+| var | 69.6154 |   140.3 | 14.9623 | 62.2675 |
+| med | 69.2876 | 73.9663 | 82.9858 |  92.297 |
+| max | 88.9247 | 86.7876 | 87.0117 | 99.0533 |
+| min | 66.5137 | 53.9899 | 77.5316 | 78.3683 |
+|     |         |         |         |         |
+
+
+* Brauer numbers:
+
+** GAP
+gap> RepeatBench(5,do Size(Semigroup(gens)); od);
+rec( avg := 24.5766, max := 25.1766, med := 24.4266, min := 24.3756, 
+  res := [ 25.1766, 24.5035, 24.4005, 24.3756, 24.4266 ], var := 0.0918407 )
+
+** HPC-GAP
+With -m 512m
+gap> RepeatBench(5,do Size(Semigroup(gens)); od);
+rec( avg := 25.4372, max := 26.1118, med := 25.3275, min := 25.1453, 
+  res := [ 26.1118, 25.1453, 25.3275, 25.3331, 25.2684 ], var := 0.118337 )
+
+|     |       GAP |  HPC-GAP |
+|-----+-----------+----------|
+| avg |   24.5766 |  25.4372 |
+| var | 0.0918407 | 0.118337 |
+| max |   25.1766 |  26.1118 |
+| med |   24.4266 |  25.3275 |
+| min |   24.3756 |  25.1453 |
+|-----+-----------+----------|
+
+* Sardonis numbers:
+
+** HPC-GAP
+
