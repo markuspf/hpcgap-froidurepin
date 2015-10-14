@@ -48,6 +48,7 @@ gens := GeneratorsOfMonoid(FullTransformationSemigroup(6));
 RepeatBench(8, do FroidurePinEnumeration(gens); od);
 #+END_SRC gap
 
+*** Commit 84edce37
 |     |   GAP | HPC-GAP | semigroups++ |
 |-----+-------+---------+--------------|
 | avg | 1.534 |   2.007 |        0.098 |
@@ -55,6 +56,16 @@ RepeatBench(8, do FroidurePinEnumeration(gens); od);
 | med | 1.512 |   1.997 |        0.093 |
 | max | 1.639 |   2.156 |        0.101 |
 | min | 1.426 |   1.935 |        0.093 |
+|-----+-------+---------+--------------|
+
+*** Commit 4fe5a02d
+|     |   GAP | HPC-GAP | semigroups++ |
+|-----+-------+---------+--------------|
+| avg | 0.641 |   0.846 |        0.098 |
+| var | 0.004 |   0.001 |        0.000 |
+| med | 0.654 |   0.821 |        0.093 |
+| max | 0.734 |   0.903 |        0.101 |
+| min | 0.549 |   0.813 |        0.093 |
 |-----+-------+---------+--------------|
 
 
