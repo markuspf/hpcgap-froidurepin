@@ -51,12 +51,14 @@ function(gens)
 end);
 
 # Todo: Get rid of superflous generators, but keep a mapping
-#       to process if that information is required 
-InstallGlobalFunction( FroidurePinEnumeration
+#       to process if that information is required
+InstallGlobalFunction( FroidurePinEnumeration,
 function(gens)
     local ngens, depth, u, v, last, elts,
           newelt, i, l,
-          nelts, nruls, curlen;
+          nelts, nruls, curlen,
+          c, t, b, n, r, s, new, p,
+          id;
 
     ngens := Length(gens);
     if ngens = 0 then
@@ -74,14 +76,15 @@ function(gens)
               , suff := fail                # suffix
               , pref := fail                # prefix
               , next := fail                # next element in military order
-              , forw := [1..ngens] * 0      # red(u * g)
-              , forwred := [1..ngens] * 0   # is red(u * g) = u * g?
-              , back := [1..ngens] * 0      # red(g * u)
+              , right := [1..ngens] * 0      # red(u * g)
+              , rightred := [1..ngens] * 0   # is red(u * g) = u * g?
+              , left := [1..ngens] * 0      # red(g * u)
               , length := 0                 # length of u
               );
+    id := u;
 
     AddDictionary(elts, u.elt, u);
-    
+
     last := u;
 
     for i in [1..ngens] do
@@ -103,7 +106,9 @@ function(gens)
             last := last.next;
             u.right[i] := last;
             u.rightred[i] := true;
-            AddDictionary(elts, gens[i], last.next);
+            u.left[i] := last;
+
+            AddDictionary(elts, gens[i], last);
         else
             nruls := nruls + 1;
 
@@ -112,27 +117,29 @@ function(gens)
         fi;
     od;
 
-    u := LookupDictionary(gens[1]);
+    u := LookupDictionary(elts, gens[1]);
     v := u;
-    last := LookupDictionary(gens[ngens]);
+#    last := LookupDictionary(elts, gens[ngens]);
     curlen := 1;
-    
+
     repeat
-        while u.length = curlen do
+        Print("length: ", curlen, "\n");
+        while u <> fail and (u.length = curlen) do
             b := u.first;
             s := u.suff;
             for i in [1..ngens] do
                 if s.rightred[i] = false then
                     r := s.right[i];
                     if r.length = 0 then
-                        u.right[i] := b;
+                        u.right[i] := id.right[b];
                     else
                         c := r.last;
                         t := r.pref;
-                        
+
                         u.right[i] := t.left[b].right[c];
                     fi;
-                else
+                    u.rightred[i] := false;
+                elif s.rightred[i] = true then
                     new := u.elt * gens[i];
                     l := LookupDictionary(elts, new);
 
@@ -146,30 +153,48 @@ function(gens)
                                         , right := [1..ngens] * 0
                                         , rightred := [1..ngens] * 0
                                         , left := [1..ngens] * 0
-                                        , length := u.length + 1;
+                                        , length := u.length + 1
                         );
+                        u.right[i] := last.next;
+                        u.rightred[i] := true;
                         AddDictionary(elts, new, last.next);
+                        last := last.next;
                     else
                         nruls := nruls + 1;
                         u.right[i] := l;
                         u.rightred[i] := false;
                     fi;
+                else
+                    Error("this shouldn't happen\n");
                 fi;
             od;
             u := u.next;
         od;
+
         u := v;
-        
-        while Length(u) = curlen do
-            p := p.pref;
-            
-            for i in [1..ngens] do
-                u.left[i] := p.left[i].right[u.last];
+
+        if curlen = 1 then
+            while u.length = curlen do
+                for i in [1..ngens] do
+                    u.left[i] := id.right[i].right[u.first];
+                od;
                 u := u.next;
             od;
-        od;
+        else
+            while u <> fail and u.length = curlen do
+                p := u.pref;
+
+                for i in [1..ngens] do
+                    u.left[i] := p.left[i].right[u.last];
+                od;
+                u := u.next;
+            od;
+        fi;
+
         v := u;
-    until u = last;
+        curlen := curlen + 1;
+    until u = fail;
+    return elts;
 end);
 
 
