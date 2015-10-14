@@ -172,23 +172,14 @@ function(gens)
 
         u := v;
 
-        if curlen = 1 then
-            while u.length = curlen do
-                for i in [1..ngens] do
-                    u.left[i] := id.right[i].right[u.first];
-                od;
-                u := u.next;
-            od;
-        else
-            while u <> fail and u.length = curlen do
-                p := u.pref;
+        while u <> fail and u.length = curlen do
+            p := u.pref;
 
-                for i in [1..ngens] do
-                    u.left[i] := p.left[i].right[u.last];
-                od;
-                u := u.next;
+            for i in [1..ngens] do
+                u.left[i] := p.left[i].right[u.last];
             od;
-        fi;
+            u := u.next;
+        od;
 
         v := u;
         curlen := curlen + 1;
