@@ -68,7 +68,7 @@ function(gens)
     nelts := 0;
     nruls := 0;
 
-    elts := NewDictionary(gens[1], true);
+    elts := HTCreate(gens[1], rec( treehashsize := 8192 ));
 
     u := rec( elt := One(gens[1])           # element in U
               , first := 0
@@ -83,12 +83,12 @@ function(gens)
               );
     id := u;
 
-    AddDictionary(elts, u.elt, u);
+    HTAdd(elts, u.elt, u);
 
     last := u;
 
     for i in [1..ngens] do
-        l := LookupDictionary(elts, gens[i]);
+        l := HTValue(elts, gens[i]);
 
         if l = fail then
             nelts := nelts + 1;
@@ -108,7 +108,7 @@ function(gens)
             u.rightred[i] := true;
             u.left[i] := last;
 
-            AddDictionary(elts, gens[i], last);
+            HTAdd(elts, gens[i], last);
         else
             nruls := nruls + 1;
 
@@ -117,9 +117,8 @@ function(gens)
         fi;
     od;
 
-    u := LookupDictionary(elts, gens[1]);
+    u := HTValue(elts, gens[1]);
     v := u;
-#    last := LookupDictionary(elts, gens[ngens]);
     curlen := 1;
 
     repeat
@@ -141,7 +140,7 @@ function(gens)
                     u.rightred[i] := false;
                 elif s.rightred[i] = true then
                     new := u.elt * gens[i];
-                    l := LookupDictionary(elts, new);
+                    l := HTValue(elts, new);
 
                     if l = fail then
                         last.next := rec( elt := new
@@ -157,7 +156,7 @@ function(gens)
                         );
                         u.right[i] := last.next;
                         u.rightred[i] := true;
-                        AddDictionary(elts, new, last.next);
+                        HTAdd(elts, new, last.next);
                         last := last.next;
                     else
                         nruls := nruls + 1;
