@@ -1,85 +1,23 @@
-* Collect the Benchmarks here
-#+BEGIN_SRC gap
-RepeatBench(10, do Size(Semigroup(gens)); od);
-RepeatBench(10, do FroidurePinEnumeration(gens); od);
-#+END_SRC
+* Benchmarks
 
+These are run on an Intel(R) Core(TM) i5-3320M CPU @ 2.60GHz
 
+** James' example-1
 
-#+BEGIN_SRC gap
-gens := GeneratorsOfSemigroup(FullTransformationSemigroup(6));
-#+END_SRC gap
-
-|     | Size |      |   FP |      |
-|-----+------+------+------+------|
-| avg | 0.46 | 0.56 | 0.89 | 1.16 |
-| var | 0.02 | 0.01 | 0.03 | 0.06 |
-| med | 0.41 | 0.51 | 0.82 | 1.08 |
-| max | 0.89 | 0.96 | 1.43 | 1.89 |
-| min | 0.40 | 0.49 | 0.79 | 1.03 |
-
-
+For this package, benchmarking is done as follows:
 #+BEGIN_SRC gap
 gens := [ Transformation( [ 2, 1, 4, 5, 3, 7, 8, 9, 10, 6 ] )
         , Transformation( [ 1, 2, 4, 3 ] )
         , Transformation( [ 1, 2, 3, 4, 5, 6, 10, 9, 8, 7 ] )
         , Transformation( [ 9, 1, 4, 3, 6, 9, 3, 4, 3, 9 ] ) ];
+RepeatBench(8, do FroidurePinEnumeration(gens); od);
 #+END_SRC
 
-|     |    Size |         |         |         |
-|     |     GAP | HPC-GAP |     GAP | HPC-GAP |
-|-----+---------+---------+---------+---------|
-| avg | 72.3686 | 74.5746 | 82.5264 | 89.1462 |
-| var | 69.6154 |   140.3 | 14.9623 | 62.2675 |
-| med | 69.2876 | 73.9663 | 82.9858 |  92.297 |
-| max | 88.9247 | 86.7876 | 87.0117 | 99.0533 |
-| min | 66.5137 | 53.9899 | 77.5316 | 78.3683 |
-|     |         |         |         |         |
-
-
-* Brauer numbers:
-
-** GAP
-gap> RepeatBench(5,do Size(Semigroup(gens)); od);
-rec( avg := 24.5766, max := 25.1766, med := 24.4266, min := 24.3756, 
-  res := [ 25.1766, 24.5035, 24.4005, 24.3756, 24.4266 ], var := 0.0918407 )
-
-** HPC-GAP
-With -m 512m
-gap> RepeatBench(5,do Size(Semigroup(gens)); od);
-rec( avg := 25.4372, max := 26.1118, med := 25.3275, min := 25.1453, 
-  res := [ 26.1118, 25.1453, 25.3275, 25.3331, 25.2684 ], var := 0.118337 )
-
-|     |       GAP |  HPC-GAP |
-|-----+-----------+----------|
-| avg |   24.5766 |  25.4372 |
-| var | 0.0918407 | 0.118337 |
-| max |   25.1766 |  26.1118 |
-| med |   24.4266 |  25.3275 |
-| min |   24.3756 |  25.1453 |
-|-----+-----------+----------|
-
-* Sardonis numbers:
-
-** HPC-GAP
-
-
-
-* 2015-10-14
-
-First implementation of (sequential) FroidurePinEnumeration is working,
-it's very slow compared to James' C++ implementation, but gives the same
-results:
-
-example-1, single-threaded
-
+The numbers for semigroups++ are obtained by running
 #+BEGIN_SRC gap
-gens := [ Transformation([2,1,4,5,3,7,8,9,10,6]),
-          Transformation([1,2,4,3,5,6,7,8,9,10]),
-          Transformation([1,2,3,4,5,6,10,9,8,7]),
-          Transformation([9,1,4,3,6,9,3,4,3,9])];;
-
+RepeatBench(8, do S := Semigroup(gens, rec(report := false, generic := true)); Size(S); od);
 #+END_SRC
+with the semigroups package loaded, and compiled semigroups++ code.
 
 |     |     GAP | HPC-GAP | semigroups++ |
 |-----+---------+---------+--------------|
@@ -88,7 +26,22 @@ gens := [ Transformation([2,1,4,5,3,7,8,9,10,6]),
 | max | 107.237 | 107.774 |        1.494 |
 | med | 102.257 | 105.073 |        1.469 |
 | min |  100.84 | 102.346 |        1.465 |
-|     |         |         |              |
+|-----+---------+---------+--------------|
 
+** Full Transformation Monoid on 6 points
+
+#+BEGIN_SRC gap
+gens := GeneratorsOfMonoid(FullTransformationSemigroup(6));
+RepeatBench(8, do FroidurePinEnumeration(gens); od);
+#+END_SRC gap
+
+|     |   GAP | HPC-GAP | semigroups++ |
+|-----+-------+---------+--------------|
+| avg | 1.534 |   2.007 |        0.098 |
+| var | 0.004 |   0.004 |        0.000 |
+| med | 1.512 |   1.997 |        0.093 |
+| max | 1.639 |   2.156 |        0.101 |
+| min | 1.426 |   1.935 |        0.093 |
+|-----+-------+---------+--------------|
 
 
