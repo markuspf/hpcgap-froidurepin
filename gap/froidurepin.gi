@@ -83,12 +83,12 @@ function(gens)
               );
     id := u;
 
-    HTAdd(elts, u.elt, u);
+    HTAdd_TreeHash_C(elts, u.elt, u);
 
     last := u;
 
     for i in [1..ngens] do
-        l := HTValue(elts, gens[i]);
+        l := HTValue_TreeHash_C(elts, gens[i]);
 
         if l = fail then
             nelts := nelts + 1;
@@ -108,7 +108,7 @@ function(gens)
             u.rightred[i] := true;
             u.left[i] := last;
 
-            HTAdd(elts, gens[i], last);
+            HTAdd_TreeHash_C(elts, gens[i], last);
         else
             nruls := nruls + 1;
 
@@ -117,7 +117,7 @@ function(gens)
         fi;
     od;
 
-    u := HTValue(elts, gens[1]);
+    u := HTValue_TreeHash_C(elts, gens[1]);
     v := u;
     curlen := 1;
 
@@ -140,7 +140,7 @@ function(gens)
                     u.rightred[i] := false;
                 elif s.rightred[i] = true then
                     new := u.elt * gens[i];
-                    l := HTValue(elts, new);
+                    l := HTValue_TreeHash_C(elts, new);
 
                     if l = fail then
                         last.next := rec( elt := new
@@ -156,7 +156,7 @@ function(gens)
                         );
                         u.right[i] := last.next;
                         u.rightred[i] := true;
-                        HTAdd(elts, new, last.next);
+                        HTAdd_TreeHash_C(elts, new, last.next);
                         last := last.next;
                     else
                         nruls := nruls + 1;
@@ -188,34 +188,152 @@ function(gens)
 end);
 
 
-InstallGlobalFunction( FroidurePinEval,
-function(fps)
-    local e, root, res, words, TraceBack;
+# Lets first try an absolutely naive approach: 
+# Shared Hashtable for elements, worker threads
+#InstallGlobalFunction( FroidurePinEnumerationParallel,
+#function(gens, opt)
+#    local ngens, depth, u, v, last, elts,
+#          newelt, i, l,
+#          nelts, nruls, curlen,
+#          c, t, b, n, r, s, new, p,
+#          id;
+#
+#    ngens := Length(gens);
+#    if ngens = 0 then
+#        return fail;
+#    fi;
+#
+#    nelts := 0;
+#    nruls := 0;
+#
+#    elts := ShareObj(HTCreate(gens[1], rec( treehashsize := 8192 )));
+#
+#    u := rec( elt := One(gens[1])           # element in U
+#              , first := 0
+#              , last := 0                   # last letter
+#              , suff := fail                # suffix
+#              , pref := fail                # prefix
+#              , next := fail                # next element in military order
+#              , right := [1..ngens] * 0      # red(u * g)
+#              , rightred := [1..ngens] * 0   # is red(u * g) = u * g?
+#              , left := [1..ngens] * 0      # red(g * u)
+#              , length := 0                 # length of u
+#              );
+#    id := u;
+#
+#    atomic readwrite do
+#       HTAdd(elts, u.elt, u);
+#    od;
+#
+#    last := u;
+#
+#    for i in [1..ngens] do
+#        atomic readonly do
+#            l := HTValue(elts, gens[i]);
+#        od;
+#
+#        if l = fail then
+#            nelts := nelts + 1;
+#            last.next := rec( elt := gens[i]              # element in U
+#                          , first := i
+#                          , last := i                   # last letter
+#                          , suff := u                   # suffix
+#                          , pref := u                   # prefix
+#                          , next := fail                # next element in military order
+#                          , right := [1..ngens] * 0     # red(u * gens[i])
+#                          , rightred := [1..ngens] * 0  # is red(u * gens[i]) = u * gens[i]?
+#                          , left   := [1..ngens] * 0    # red(gens[i] * u)
+#                          , length := 1                 # length of u
+#                          );
+#            last := last.next;
+#            u.right[i] := last;
+#            u.rightred[i] := true;
+#            u.left[i] := last;
+#
+#            atomic readwrite do
+#                HTAdd(elts, gens[i], last);
+#            od;
+#        else
+#            nruls := nruls + 1;
+#
+#            u.right[i] := l;
+#            u.rightred[i] := false;
+#        fi;
+#    od;
+#
+#    atomic readonly do
+#        u := HTValue(elts, gens[1]);
+#    od;
+#
+#    v := u;
+#    curlen := 1;
+#
+#    repeat
+#        Print("length: ", curlen, "\n");
+#        while u <> fail and (u.length = curlen) do
+#            b := u.first;
+#            s := u.suff;
+#            for i in [1..ngens] do
+#                if s.rightred[i] = false then
+#                    r := s.right[i];
+#                    if r.length = 0 then
+#                        u.right[i] := id.right[b];
+#                    else
+#                        c := r.last;
+#                        t := r.pref;
+#
+#                        u.right[i] := t.left[b].right[c];
+#                    fi;
+#                    u.rightred[i] := false;
+#                elif s.rightred[i] = true then
+#                    new := u.elt * gens[i];
+#                    atomic readonly do l := HTValue(elts, new); od;
+#
+#                    if l = fail then
+#                        last.next := rec( elt := new
+#                                        , first := b
+#                                        , last := i
+#                                        , pref := u
+#                                        , suff := s.right[i]
+#                                        , next := fail
+#                                        , right := [1..ngens] * 0
+#                                        , rightred := [1..ngens] * 0
+#                                        , left := [1..ngens] * 0
+#                                        , length := u.length + 1
+#                        );
+#                        u.right[i] := last.next;
+#                        u.rightred[i] := true;
+#
+#                        atomic readwrite do HTAdd(elts, new, last.next); od;
+#
+#                        last := last.next;
+#                    else
+#                        nruls := nruls + 1;
+#                        u.right[i] := l;
+#                        u.rightred[i] := false;
+#                    fi;
+#                else
+#                    Error("this shouldn't happen\n");
+#                fi;
+#            od;
+#            u := u.next;
+#        od;
+#
+#        u := v;
+#
+#        while u <> fail and u.length = curlen do
+#            p := u.pref;
+#
+#            for i in [1..ngens] do
+#                u.left[i] := p.left[i].right[u.last];
+#            od;
+#            u := u.next;
+#        od;
+#
+#        v := u;
+#        curlen := curlen + 1;
+#    until u = fail;
+#    return elts;
+#end);
 
-    root := LookupDictionary(fps, IdentityTransformation);
-    e := root;
 
-    TraceBack := function(elt)
-        local f, res;
-
-        res := [];
-        f := elt;
-
-        while f.back <> -1 do
-            Add(res, f.back);
-            f := f.prev;
-        od;
-        return res;
-    end;
-
-    res := [];
-    words := [];
-
-    repeat
-        Add(res, e!.elt);
-        Add(words, TraceBack(e));
-        e := e.next;
-    until e = fail;
-
-    return([res, words]);
-end);

@@ -40,6 +40,17 @@ with the semigroups package loaded, and compiled semigroups++ code.
 |-----+--------+---------+--------------|
 
 
+*** Commit
+|     |   GAP | HPC-GAP | semigroups++ |
+|-----+-------+---------+--------------|
+| avg | 7.133 |   5.562 |        1.476 |
+| var | 0.135 |   0.948 |        0.000 |
+| max | 7.642 |   7.769 |        1.494 |
+| med | 7.028 |   4.956 |        1.469 |
+| min | 6.636 |   4.552 |        1.465 |
+|-----+-------+---------+--------------|
+
+
 
 ** Full Transformation Monoid on 6 points
 
